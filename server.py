@@ -1,5 +1,7 @@
 import socket
 
+from client import Client
+
 
 class Server:
     def __init__(self, host='0.0.0.0', port=8000):
@@ -12,7 +14,14 @@ class Server:
         while True:
             client_socket, client_addr = self.socket.accept()
             print('client here')
+
+            self.handle_client(client_socket=client_socket)
             client_socket.close()
+
+    @staticmethod
+    def handle_client(client_socket):
+        client = Client(client_socket)
+        client.handle()
 
 
 server = Server()
