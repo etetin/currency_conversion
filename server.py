@@ -1,9 +1,8 @@
+import os
+import sys
 import socket
 import json
 import urllib3
-
-# may be should to move this key into env var?
-from api_info import app_id
 
 from client import Client
 
@@ -57,6 +56,11 @@ class Server:
 
         return decorator
 
+
+try:
+    app_id = os.environ['APP_ID']
+except KeyError:
+    sys.exit('Variable APP_ID is not setted. exit')
 
 server = Server()
 
