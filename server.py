@@ -101,6 +101,7 @@ def convert(request):
     response = connection.getresponse()
     rub_rate = json.loads(response.read().decode('utf-8'))['rates']['RUB']
 
+    # TODO need to add in response additional info like: from, to, timestamp, etc
     return 200, json.dumps({'result': round(data['amount'] * rub_rate, 2)})
 
 
@@ -118,3 +119,11 @@ def not_found(request):
 
 
 server.run()
+
+# TODO add README
+# TODO create tests
+# TODO add type annotation
+# TODO add logging
+
+# optional
+# TODO daemon for restarting if script failed
