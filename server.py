@@ -1,4 +1,5 @@
 import socket
+import json
 
 from client import Client
 
@@ -39,6 +40,20 @@ class Server:
 
         return decorator
 
+    def post(self, path):
+        def decorator(f):
+            class Handler:
+                def can_handle(self, request):
+                    return request.method == 'POST' and request.path == path
+
+                def handle(self, request):
+                    return f(request)
+
+            self.handlers.append(Handler())
+            return f
+
+        return decorator
+
     def status_404(self):
         def decorator(f):
             class Handler:
@@ -68,6 +83,11 @@ def root(request):
                 <h1>hello</h1>
             </body>
         </html>'''
+
+
+@server.post('/convert')
+def convert(request):
+    return 200, json.dumps({'a': 'b', 1: 1})
 
 
 @server.status_404()

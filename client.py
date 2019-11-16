@@ -41,5 +41,11 @@ class Client:
 
         self.socket.send(f'HTTP/1.0 {code} {code_name}\r\n'.encode())
 
+        self.send_header('Content-type', 'application/json')
+        self.socket.send(b'\r\n')  # finish headers
+
         self.socket.send(body)
+
+    def send_header(self, name, value):
+        self.socket.send(f'{name}: {value}\r\n'.encode())
 
