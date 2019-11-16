@@ -3,7 +3,7 @@ import sys
 import argparse
 import socket
 import json
-import urllib3
+import http.client
 
 from client import Client
 
@@ -96,13 +96,10 @@ def convert(request):
             ) or data['amount'] < 0:
         return 400, json.dumps({'error': 'Wrong params'})
 
-    http = urllib3.PoolManager()
-    response = http.request(
-        method='GET',
-        url=f'https://openexchangerates.org/api/latest.json?app_id={app_id}&?base=USD'
-    )
-
-    rub_rate = json.loads(response.data.decode('utf-8'))['rates']['RUB']
+    connection = http.client.HTTPConnection('openexchangerates.org', 80)
+    connection.request("GET", f"/api/latest.json?app_id={app_id}&?base=USD")
+    response = connection.getresponse()
+    rub_rate = json.loads(response.read().decode('utf-8'))['rates']['RUB']
 
     return 200, json.dumps({'result': round(data['amount'] * rub_rate, 2)})
 
