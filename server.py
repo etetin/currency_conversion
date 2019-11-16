@@ -22,25 +22,28 @@ class Server:
         client = Client(client_socket, self.handlers)
         request = client.parse_request()
         response = client.handle_request(request=request)
-        if response is None:
-            # TODO return 404 or 405
-            response = 404, '''
-                <html>
-                    <head>
-                        <title>page not found</title>
-                    </head>
-                    <body>
-                        <h1>404 not found</h1>
-                    </body>
-                </html>'''
-
         client.send_response(response=response)
 
     def get(self, path):
         def decorator(f):
             class Handler:
                 def can_handle(self, request):
+                    # TODO need to add handler for 405 status
                     return request.method == 'GET' and request.path == path
+
+                def handle(self, request):
+                    return f(request)
+
+            self.handlers.append(Handler())
+            return f
+
+        return decorator
+
+    def status_404(self):
+        def decorator(f):
+            class Handler:
+                def can_handle(self, request):
+                    return True
 
                 def handle(self, request):
                     return f(request)
@@ -63,6 +66,19 @@ def root(request):
             </head>
             <body>
                 <h1>hello</h1>
+            </body>
+        </html>'''
+
+
+@server.status_404()
+def not_found(request):
+    return 404, '''
+        <html>
+            <head>
+                <title>page not found</title>
+            </head>
+            <body>
+                <h1>404 not found</h1>
             </body>
         </html>'''
 
