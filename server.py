@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 import socket
 import json
 import urllib3
@@ -8,7 +9,8 @@ from client import Client
 
 
 class Server:
-    def __init__(self, host='0.0.0.0', port=8000):
+    def __init__(self, host='0.0.0.0', port=5000):
+        print(f'Server initialized by address - {host}:{port}')
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((host, port))
@@ -62,7 +64,20 @@ try:
 except KeyError:
     sys.exit('Variable APP_ID is not setted. exit')
 
-server = Server()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--host')
+parser.add_argument('--port')
+args = parser.parse_args()
+
+custom_server_params = {}
+if args.host is not None:
+    custom_server_params['host'] = args.host
+
+if args.port is not None:
+    custom_server_params['port'] = int(args.port)
+
+server = Server(**custom_server_params)
 
 
 @server.post('/convert')
