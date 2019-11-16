@@ -1,20 +1,25 @@
+import socket
+from typing import Tuple
+
+
 class Request:
-    pass
+    method = None
+    path = None
+    data = None
 
 
 class Client:
-    def __init__(self, socket, handlers):
-        self.socket = socket
+    def __init__(self, client_socket: socket.socket, handlers: list) -> None:
+        self.socket = client_socket
         self.handlers = handlers
 
-    def handle_request(self, request):
+    def handle_request(self, request: Request) -> Tuple[int, str]:
         for handler in self.handlers:
             if handler.can_handle(request=request):
                 return handler.handle(request)
-        else:
-            return None  # no handlers
+        # `else` case is unreachable because we have handler `any`
 
-    def parse_request(self):
+    def parse_request(self) -> Request:
         raw_request = self.socket.recv(4096).decode('utf-8').splitlines()
 
         request = Request()
@@ -29,7 +34,7 @@ class Client:
 
         return request
 
-    def send_response(self, response):
+    def send_response(self, response: Tuple[int, str]) -> None:
         code, body = response
         body = body.encode()
 
@@ -48,6 +53,6 @@ class Client:
 
         self.socket.send(body)
 
-    def send_header(self, name, value):
+    def send_header(self, name: str, value: str) -> None:
         self.socket.send(f'{name}: {value}\r\n'.encode())
 

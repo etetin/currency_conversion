@@ -5,19 +5,20 @@ import socket
 import json
 import http.client
 from datetime import datetime
+from typing import Callable, Tuple
 
-from client import Client
+from client import Client, Request
 
 
 class Server:
-    def __init__(self, host='0.0.0.0', port=5000):
+    def __init__(self, host: str = '0.0.0.0', port: int = 5000) -> None:
         print(f'Server initialized by address - {host}:{port}')
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((host, port))
         self.handlers = []
 
-    def run(self):
+    def run(self) -> None:
         self.socket.listen()
         while True:
             client_socket, client_addr = self.socket.accept()
@@ -25,19 +26,19 @@ class Server:
 
             client_socket.close()
 
-    def handle_client(self, client_socket):
+    def handle_client(self, client_socket: socket.socket) -> None:
         client = Client(client_socket, self.handlers)
         request = client.parse_request()
         response = client.handle_request(request=request)
         client.send_response(response=response)
 
-    def post(self, path):
-        def decorator(f):
+    def post(self, path: str) -> Callable[[Request], Callable[[Request], Tuple[int, str]]]:
+        def decorator(f) -> Callable[[Request], Tuple[int, str]]:
             class Handler:
-                def can_handle(self, request):
+                def can_handle(self, request: Request) -> bool:
                     return request.method == 'POST' and request.path == path
 
-                def handle(self, request):
+                def handle(self, request: Request) -> Tuple[int, str]:
                     return f(request)
 
             self.handlers.append(Handler())
@@ -45,13 +46,13 @@ class Server:
 
         return decorator
 
-    def status_404(self):
+    def status_404(self) -> Callable[[Request], Callable[[Request], Tuple[int, str]]]:
         def decorator(f):
             class Handler:
-                def can_handle(self, request):
+                def can_handle(self, request: Request) -> bool:
                     return True
 
-                def handle(self, request):
+                def handle(self, request: Request) -> Tuple[int, str]:
                     return f(request)
 
             self.handlers.append(Handler())
@@ -82,7 +83,7 @@ server = Server(**custom_server_params)
 
 
 @server.post('/convert')
-def convert(request):
+def convert(request: Request) -> Tuple[int, str]:
     try:
         data = json.loads(request.data)
     # TODO im not sure that this is correct exception
@@ -112,7 +113,7 @@ def convert(request):
 
 
 @server.status_404()
-def not_found(request):
+def not_found(request: Request) -> Tuple[int, str]:
     return 404, '''
         <html>
             <head>
@@ -128,7 +129,6 @@ server.run()
 
 # TODO add README
 # TODO create tests
-# TODO add type annotation
 # TODO add logging
 
 # optional
