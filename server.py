@@ -25,21 +25,6 @@ class Server:
         response = client.handle_request(request=request)
         client.send_response(response=response)
 
-    def get(self, path):
-        def decorator(f):
-            class Handler:
-                def can_handle(self, request):
-                    # TODO need to add handler for 405 status
-                    return request.method == 'GET' and request.path == path
-
-                def handle(self, request):
-                    return f(request)
-
-            self.handlers.append(Handler())
-            return f
-
-        return decorator
-
     def post(self, path):
         def decorator(f):
             class Handler:
@@ -70,19 +55,6 @@ class Server:
 
 
 server = Server()
-
-
-@server.get('/')
-def root(request):
-    return 200, '''
-        <html>
-            <head>
-                <title>index page</title>
-            </head>
-            <body>
-                <h1>hello</h1>
-            </body>
-        </html>'''
 
 
 @server.post('/convert')
