@@ -4,6 +4,7 @@ import argparse
 import socket
 import json
 import http.client
+from datetime import datetime
 
 from client import Client
 
@@ -98,11 +99,16 @@ def convert(request):
 
     connection = http.client.HTTPConnection('openexchangerates.org', 80)
     connection.request("GET", f"/api/latest.json?app_id={app_id}&?base=USD")
-    response = connection.getresponse()
-    rub_rate = json.loads(response.read().decode('utf-8'))['rates']['RUB']
+    response = json.loads(connection.getresponse().read().decode('utf-8'))
+    rub_rate = response['rates']['RUB']
 
-    # TODO need to add in response additional info like: from, to, timestamp, etc
-    return 200, json.dumps({'result': round(data['amount'] * rub_rate, 2)})
+    respnse_data = {
+        'result': round(data['amount'] * rub_rate, 2),
+        'from': 'USD',
+        'to': 'RUB',
+        'state_at': datetime.fromtimestamp(response['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+    }
+    return 200, json.dumps(respnse_data)
 
 
 @server.status_404()
