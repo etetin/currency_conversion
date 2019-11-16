@@ -59,7 +59,13 @@ server = Server()
 
 @server.post('/convert')
 def convert(request):
-    return 200, json.dumps({'a': 'b', 1: 1})
+    try:
+        data = json.loads(request.data)
+    except json.decoder.JSONDecodeError:
+        # TODO return 400
+        pass
+
+    return 200, json.dumps({'result': data['amount'] * 2})
 
 
 @server.status_404()

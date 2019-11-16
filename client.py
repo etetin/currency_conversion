@@ -1,6 +1,3 @@
-from copy import copy
-
-
 class Request:
     pass
 
@@ -23,10 +20,12 @@ class Client:
         request = Request()
         request_info = raw_request.pop(0)
         request.method, request.path, request.http_version = request_info.split()  # METHOD /path HTTP/version
-        request.data = raw_request.pop()
 
+        end_of_headers = raw_request.index('')
         # TODO parse headers
-        request.headers = copy(raw_request)
+        request.headers = raw_request[:end_of_headers]
+        request.data = '\n'.join(raw_request[end_of_headers+1:])
+        del raw_request
 
         return request
 
