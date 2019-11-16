@@ -69,18 +69,17 @@ server = Server()
 def convert(request):
     try:
         data = json.loads(request.data)
+    # TODO im not sure that this is correct exception
     except json.decoder.JSONDecodeError:
-        # TODO return 415
-        pass
+        return 415, json.dumps({'error': 'Unsupported Media Type'})
 
     # validate data
-    if 'amount' not in data or \
+    if not isinstance(data, dict) or 'amount' not in data or \
             not (
                     isinstance(data['amount'], int) or
                     isinstance(data['amount'], float)
             ) or data['amount'] < 0:
-        # TODO return 400
-        pass
+        return 400, json.dumps({'error': 'Wrong params'})
 
     http = urllib3.PoolManager()
     response = http.request(

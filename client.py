@@ -35,7 +35,10 @@ class Client:
 
         code_name = {
             200: 'OK',
+            400: 'Bad Request',
             404: 'Not Found',
+            405: 'Method Not Allowed',
+            415: 'Unsupported Media Type',
         }[code]
 
         self.socket.send(f'HTTP/1.0 {code} {code_name}\r\n'.encode())
