@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 import argparse
 import socket
 import json
@@ -29,8 +30,18 @@ class Server:
     def handle_client(self, client_socket: socket.socket) -> None:
         client = Client(client_socket, self.handlers)
         request = client.parse_request()
-        response = client.handle_request(request=request)
-        client.send_response(response=response, request=request)
+        try:
+            response = client.handle_request(request=request)
+        except:
+            _, ex, tb = sys.exc_info()
+            tb_message = '\r'.join(traceback.format_tb(tb))
+            err_message = str(ex)
+            response = (500, 'smth gone wrong')
+            f = open("error.log", "a")
+            f.write(f'{datetime.now()}\r{tb_message}{err_message}\r\r')
+            f.close()
+        finally:
+            client.send_response(response=response, request=request)
 
     def post(self, path: str) -> Callable[[Request], Callable[[Request], Tuple[int, str]]]:
         def decorator(f) -> Callable[[Request], Tuple[int, str]]:
@@ -74,6 +85,7 @@ parser.add_argument('--port')
 args = parser.parse_args()
 
 custom_server_params = {}
+# TODO may be validation for passed arguments?
 if args.host is not None:
     custom_server_params['host'] = args.host
 
@@ -130,7 +142,6 @@ server.run()
 
 # TODO add README
 # TODO create tests
-# TODO add logging of errors
 
 # optional
 # TODO daemon for restarting if script failed
