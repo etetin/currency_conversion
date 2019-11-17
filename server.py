@@ -6,9 +6,21 @@ import socket
 import json
 import http.client
 from datetime import datetime
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Union
 
 from client import Client, Request
+
+
+def get_rate() -> Tuple[Union[int, float], str]:
+    connection = http.client.HTTPConnection('openexchangerates.org', 80)
+    connection.request("GET", f"/api/latest.json?app_id={app_id}&?base=USD")
+    response = json.loads(connection.getresponse().read().decode('utf-8'))
+    rub_rate = response['rates']['RUB']
+    # notice that this datetime will be in server timezone
+    # i'm not sure can i use `pytz`, so i don't wanna romp with default library
+    state_at = datetime.fromtimestamp(response['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+
+    return rub_rate, state_at
 
 
 class Server:
@@ -38,7 +50,7 @@ class Server:
             err_message = str(ex)
             response = (500, 'smth gone wrong')
             f = open("error.log", "a")
-            f.write(f'{datetime.now()}\r{tb_message}{err_message}\r\r')
+            f.write(f'{datetime.now()}\n{tb_message}{err_message}\r\n\r\n')
             f.close()
         finally:
             client.send_response(response=response, request=request)
@@ -111,16 +123,15 @@ def convert(request: Request) -> Tuple[int, str]:
             ) or data['amount'] < 0:
         return 400, json.dumps({'error': 'Wrong params'})
 
-    connection = http.client.HTTPConnection('openexchangerates.org', 80)
-    connection.request("GET", f"/api/latest.json?app_id={app_id}&?base=USD")
-    response = json.loads(connection.getresponse().read().decode('utf-8'))
-    rub_rate = response['rates']['RUB']
+    # not best decision to make request every time, because data updated hourly
+    # for example, we can store this data on server side and update them also hourly
+    rub_rate, state_at = get_rate()
 
     respnose_data = {
         'result': round(data['amount'] * rub_rate, 2),
         'from': 'USD',
         'to': 'RUB',
-        'state_at': datetime.fromtimestamp(response['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+        'state_at': state_at
     }
     return 200, json.dumps(respnose_data)
 
@@ -140,7 +151,6 @@ def not_found(request: Request) -> Tuple[int, str]:
 
 server.run()
 
-# TODO add README
 # TODO create tests
 
 # optional
