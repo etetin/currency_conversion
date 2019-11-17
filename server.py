@@ -36,6 +36,7 @@ class Server:
         def decorator(f) -> Callable[[Request], Tuple[int, str]]:
             class Handler:
                 def can_handle(self, request: Request) -> bool:
+                    # TODO what if url path is exist, but method is not allowed?
                     return request.method == 'POST' and request.path == path
 
                 def handle(self, request: Request) -> Tuple[int, str]:
@@ -103,13 +104,13 @@ def convert(request: Request) -> Tuple[int, str]:
     response = json.loads(connection.getresponse().read().decode('utf-8'))
     rub_rate = response['rates']['RUB']
 
-    respnse_data = {
+    respnose_data = {
         'result': round(data['amount'] * rub_rate, 2),
         'from': 'USD',
         'to': 'RUB',
         'state_at': datetime.fromtimestamp(response['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
     }
-    return 200, json.dumps(respnse_data)
+    return 200, json.dumps(respnose_data)
 
 
 @server.status_404()
