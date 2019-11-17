@@ -30,7 +30,7 @@ class Server:
         client = Client(client_socket, self.handlers)
         request = client.parse_request()
         response = client.handle_request(request=request)
-        client.send_response(response=response)
+        client.send_response(response=response, request=request)
 
     def post(self, path: str) -> Callable[[Request], Callable[[Request], Tuple[int, str]]]:
         def decorator(f) -> Callable[[Request], Tuple[int, str]]:
@@ -130,7 +130,7 @@ server.run()
 
 # TODO add README
 # TODO create tests
-# TODO add logging
+# TODO add logging of errors
 
 # optional
 # TODO daemon for restarting if script failed

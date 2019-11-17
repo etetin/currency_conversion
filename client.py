@@ -1,10 +1,14 @@
 import socket
-from typing import Tuple
+import re
+from typing import Tuple, Optional, Union
+from datetime import datetime
 
 
 class Request:
     method = None
     path = None
+    http_version = None
+    headers = None
     data = None
 
 
@@ -34,9 +38,10 @@ class Client:
 
         return request
 
-    def send_response(self, response: Tuple[int, str]) -> None:
+    def send_response(self, response: Tuple[int, str], request: Request) -> None:
         code, body = response
         body = body.encode()
+        content_length = len(body)  # i'm not sure that this is correct measure
 
         code_name = {
             200: 'OK',
@@ -49,10 +54,26 @@ class Client:
         self.socket.send(f'HTTP/1.0 {code} {code_name}\r\n'.encode())
 
         self.send_header('Content-type', 'application/json')
+        self.send_header('Content-Length', content_length)
         self.socket.send(b'\r\n')  # finish headers
-
         self.socket.send(body)
 
-    def send_header(self, name: str, value: str) -> None:
+        access_row = f'{self.socket.getpeername()[0]} - [{datetime.now()}] ' \
+            f'"{request.method} {request.path} {request.http_version}" ' \
+            f'{code} {content_length} "User-Agent: {Client.get_user_agent(headers=request.headers)}" \n'
+        f = open("access.log", "a")
+        f.write(access_row)
+        f.close()
+
+    def send_header(self, name: str, value: Union[int, str]) -> None:
         self.socket.send(f'{name}: {value}\r\n'.encode())
 
+    @staticmethod
+    def get_user_agent(headers: list) -> Optional[int]:
+        mask = r'^User-Agent: '
+        for header in headers:
+            result = re.match(mask, header)
+            if result:
+                return header[result.end():]
+        else:
+            return None
