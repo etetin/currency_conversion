@@ -54,6 +54,24 @@ If you wanna specify your own host or port, you can pass this params in script:
 ```
 
 
+## Request example
+
+POST `/convert`
+```
+{
+    "amount": 1, # you can int or float
+}
+```
+
+**Response**
+```
+{
+    "result": 63.77,
+    "from": "USD",
+    "to": "RUB",
+    "state_at": "2019-11-18 07:00:00" # datetime in server timezone
+}
+```
 ## TODO
 console command for request
 ```
@@ -63,3 +81,4 @@ $ curl -d '{"amount": 3}' -X POST http://0.0.0.0:5000/convert
 about testing
 
 if you wanna run server like background process, you can run it with using screen
+what about sync?
