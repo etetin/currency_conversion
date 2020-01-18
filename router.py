@@ -1,5 +1,5 @@
 import views
 
 urls = {
-    'ping': views.ping
+    '/ping': views.ping
 }

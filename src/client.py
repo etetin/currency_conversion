@@ -13,15 +13,8 @@ class Request:
 
 
 class Client:
-    def __init__(self, client_socket: socket.socket, handlers: list) -> None:
+    def __init__(self, client_socket: socket.socket) -> None:
         self.socket = client_socket
-        self.handlers = handlers
-
-    def handle_request(self, request: Request) -> Tuple[int, str]:
-        for handler in self.handlers:
-            if handler.can_handle(request=request):
-                return handler.handle(request)
-        # `else` case is unreachable because we have handler `any`
 
     def parse_request(self) -> Request:
         raw_request = self.socket.recv(4096).decode('utf-8').splitlines()
